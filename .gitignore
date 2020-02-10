@@ -1,0 +1,8 @@
+#catalogs
+__pycache__/
+.vscode/
+venv/
+#database files
+*.db
+#техзадание
+TZ.txt

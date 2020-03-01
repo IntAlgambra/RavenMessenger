@@ -65,12 +65,12 @@ class Server():
             response = messages.ServerResponce(202, 'OK')
             client.send(response.encode())
             self.add_client(login, client)
+            self.update_contacts()
             print('access granted')
             return login
         else:
             response = messages.ServerResponce(402, 'Wrong login or password')
             client.send(response.encode())
-            client.close()
             print('access denied')
             return False
 
@@ -93,7 +93,6 @@ class Server():
         else:
             response = messages.ServerResponce(402, 'Wrong temporary password')
             client.send(response.encode())
-            client.close()
             print('access denied')
             return False
 
@@ -139,13 +138,25 @@ class Server():
         response  = messages.ReturnContactsMessage(contacts)
         client.send(response.encode())
 
+    def update_contacts(self):
+        print('updating contacts')
+        online_clients = self.get_online_clients()
+        for connection in self.clients.values():
+            online_clients_message = messages.ReturnContactsMessage(online_clients)
+            connection.send(online_clients_message.encode())
+
+
     def handle_client(self, client):
         '''
         main loop for each client.
         '''
         login = None
         while not login:
-            login = self.handle_connection(client)
+            try:
+                login = self.handle_connection(client)
+            except ConnectionResetError:
+                print('client closed connection')
+                return
         while True:
             msg = client.recv(1024)
             if not msg:
@@ -156,6 +167,7 @@ class Server():
             if action == 'msg':
                 self.handle_message(msg)
             elif action == 'get_contacts':
+                print('returning contacts')
                 self.return_contacts(msg_data)
 
     def start_client_thread(self, client):

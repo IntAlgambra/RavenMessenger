@@ -2,6 +2,14 @@ import npyscreen
 import client_backend
 import rsa
 
+#Кастомизируем класс Title text
+
+class CustomTitleText(npyscreen.TitleText):
+    _entry_type = npyscreen.Textfield
+    def __init__(self, *args, **kwargs):
+        super(CustomTitleText, self).__init__(*args, **kwargs)
+        self.allow_override_begin_entry_at = True
+
 #Блок отображения истории сообщений
 class ChatBox(npyscreen.BoxTitle):
 
@@ -16,6 +24,11 @@ class MessageBox(npyscreen.BoxTitle):
         super(MessageBox, self).__init__(*args, **kwargs)
 
     _contained_widget = npyscreen.MultiLineEdit
+
+class LoginBox(npyscreen.BoxTitle):
+    def __init__(self, *args, **kwargs):
+        super(LoginBox, self).__init__(*args, **kwargs)
+
 
 #Кнопка отправки сообщения
 class SendButton(npyscreen.ButtonPress):
@@ -80,7 +93,6 @@ class MainForm(npyscreen.Form):
 
     def while_waiting(self):
         contacts = client.get_contacts()
-        client.request_contacts()
         self.contacts.max_height = len(contacts) + 1
         self.contacts.values = contacts
         try:
@@ -101,9 +113,35 @@ class AuthForm(npyscreen.ActionFormV2):
         super(AuthForm, self).__init__(*args, **kwargs)
 
     def create(self):
-        self.login = self.add(npyscreen.TitleText, name='login')
-        self.password = self.add(npyscreen.TitlePassword, name='password')
-        self.registration_button = self.add(RegistrationButton, name='sign in', parent_form=self)
+        y, x = self.useable_space()
+        # self.login = self.add(npyscreen.TitleText, name='login', relx=x//2-1)
+        self.login = self.add(
+            CustomTitleText,
+            begin_entry_at = 10,
+            use_two_lines = False,
+            name = 'login',
+            # max_width = x//2,
+            # relx = x//2 - 1,
+            # rely = y//2 + 1,
+        )
+        # self.password = self.add(npyscreen.TitlePassword, name='password')
+        self.password = self.add(
+            npyscreen.TitlePassword,
+            name = 'password',
+            begin_entry_at = 10,
+            use_two_lines = False,
+            # max_width = x//2,
+            # relx = x//2 - 1,
+            # rely = y//2,
+        )
+        self.registration_button = self.add(
+            RegistrationButton,
+            name='sign in',
+            # parent_form=self,
+            # relx = x//2 - 3,
+            # rely = y//2 + 2,
+        )
+        # self.registration_button = self.add(RegistrationButton, name='sign in', parent_form=self)
 
     def on_cancel(self):
         self.parentApp.setNextForm(None)
